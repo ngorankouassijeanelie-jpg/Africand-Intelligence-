@@ -1,0 +1,41 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: africand
+      POSTGRES_PASSWORD: africand
+      POSTGRES_DB: africand_intelligence
+    ports:
+      - "5432:5432"
+    volumes:
+      - africand_db_data:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql://africand:africand@db:5432/africand_intelligence
+      AI_PROVIDER: mock
+      JWT_SECRET: change-me-in-production
+      ADMIN_EMAIL: admin@africand.com
+      ADMIN_PASSWORD: change-me-in-production
+      CORS_ORIGINS: '["http://localhost:3000"]'
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      API_URL: http://backend:8000
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+
+volumes:
+  africand_db_data:
